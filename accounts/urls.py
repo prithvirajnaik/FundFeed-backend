@@ -8,7 +8,7 @@ urlpatterns = [
     path("login/", login, name="login"),
     path("me/", me, name="me"),
     path("profile/<str:user_id>/", public_profile),
-    path("profile/update/", update_profile),
+    path("profile/update/", update_profile, name="update_profile"),
 
 ]
 

@@ -53,13 +53,4 @@ class SavedInvestorPostSerializer(serializers.ModelSerializer):
         model = SavedInvestorPost
         fields = ["id", "developer", "post", "saved_at"]
 
-class SavedInvestorPostSerializer(serializers.ModelSerializer):
-    post = InvestorPostSerializer(read_only=True)
 
-    class Meta:
-        model = SavedInvestorPost
-        fields = [
-            "developer",
-            "post",
-            "saved_at",
-        ]

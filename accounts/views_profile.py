@@ -41,10 +41,24 @@ def public_profile(request, user_id):
 # -----------------------------------------------------
 # PATCH /profile/update/
 # -----------------------------------------------------
-@api_view(["PATCH"])
+@api_view(["PATCH", "OPTIONS"])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
     user = request.user
+
+    # Handle Avatar Upload
+    if "avatar" in request.FILES:
+        avatar_file = request.FILES["avatar"]
+        from django.core.files.storage import default_storage
+        from django.core.files.base import ContentFile
+        
+        # Save file
+        file_path = default_storage.save(f"avatars/{user.id}_{avatar_file.name}", ContentFile(avatar_file.read()))
+        
+        # Update user avatar_url
+        # Assuming MEDIA_URL is /media/
+        user.avatar_url = f"/media/{file_path}"
+        user.save()
 
     if user.role == "developer":
         profile, _ = DeveloperProfile.objects.get_or_create(user=user)
@@ -66,6 +80,10 @@ def update_profile(request):
 
     if serializer.is_valid():
         serializer.save()
-        return Response({"profile": serializer.data})
+        # Return updated user data as well to reflect new avatar
+        return Response({
+            "profile": serializer.data,
+            "avatar_url": user.avatar_url
+        })
 
     return Response(serializer.errors, status=400)
