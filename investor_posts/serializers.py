@@ -1,0 +1,65 @@
+from rest_framework import serializers
+from .models import InvestorPost, SavedInvestorPost
+from accounts.serializers import UserSerializer
+
+
+class InvestorPostSerializer(serializers.ModelSerializer):
+    investor = UserSerializer(read_only=True)
+
+    logo_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = InvestorPost
+        fields = [
+            "id",
+            "investor",
+            "title",
+            "description",
+            "tags",
+            "stages",
+            "amount_range",
+            "location",
+            "contact_preference",
+            "logo_url",
+            "views",
+            "saved_count",
+            "created_at",
+        ]
+
+    def get_logo_url(self, obj):
+        if obj.logo:
+            return obj.logo.url
+        return None
+
+class InvestorPostCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvestorPost
+        fields = [
+            "title",
+            "description",
+            "tags",
+            "stages",
+            "amount_range",
+            "location",
+            "contact_preference",
+            "logo",
+        ]
+
+
+class SavedInvestorPostSerializer(serializers.ModelSerializer):
+    post = InvestorPostSerializer(read_only=True)
+
+    class Meta:
+        model = SavedInvestorPost
+        fields = ["id", "developer", "post", "saved_at"]
+
+class SavedInvestorPostSerializer(serializers.ModelSerializer):
+    post = InvestorPostSerializer(read_only=True)
+
+    class Meta:
+        model = SavedInvestorPost
+        fields = [
+            "developer",
+            "post",
+            "saved_at",
+        ]
