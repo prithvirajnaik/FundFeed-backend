@@ -14,6 +14,7 @@ urlpatterns = [
     # Move pitches to api/ prefix to avoid conflicts
     path("api/", include("pitches.urls")),
     path("api/", include("investor_posts.urls")),
+    path("api/", include("requests_app.urls")),
 
 ]
 

@@ -28,9 +28,43 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         return obj.investor == request.user
 
 class InvestorPostViewSet(viewsets.ModelViewSet):
-    queryset = InvestorPost.objects.all().order_by("-created_at")
-    filter_backends = [filters.SearchFilter]
-    search_fields = ["title", "description", "tags", "stages", "location"]
+    def get_queryset(self):
+        from django.db.models import Q
+        queryset = InvestorPost.objects.all().order_by("-created_at")
+
+        # 1. Investor Filter (Dashboard)
+        investor_id = self.request.query_params.get('investor')
+        if investor_id:
+            if investor_id == 'me':
+                queryset = queryset.filter(investor=self.request.user)
+            else:
+                queryset = queryset.filter(investor__id=investor_id)
+
+        # 1. Search (Title, Description, Location)
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | 
+                Q(description__icontains=search) |
+                Q(location__icontains=search)
+            )
+
+        # 2. Tags Filter (JSONField)
+        tag = self.request.query_params.get('tags')
+        if tag:
+            queryset = queryset.filter(tags__icontains=tag)
+
+        # 3. Stage Filter (JSONField)
+        stage = self.request.query_params.get('stage')
+        if stage:
+            queryset = queryset.filter(stages__icontains=stage)
+
+        # 4. Location Filter
+        location = self.request.query_params.get('location')
+        if location:
+            queryset = queryset.filter(location__icontains=location)
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:

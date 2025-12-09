@@ -35,8 +35,6 @@ class ContactRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactRequest
         fields = [
-            "developer",
-            "investor",
             "pitch",
             "investor_post",
             "message",

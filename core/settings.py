@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "accounts",
     "pitches",
     "investor_posts",
+    "requests_app",
     "django_extensions",
 ]
 

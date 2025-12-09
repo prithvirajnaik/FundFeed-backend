@@ -16,7 +16,38 @@ from .serializers import (
 # PITCH VIEWSET
 # -----------------------------------------------------
 class PitchViewSet(viewsets.ModelViewSet):
-    queryset = Pitch.objects.all().order_by("-created_at")
+    def get_queryset(self):
+        from django.db.models import Q
+        queryset = Pitch.objects.all().order_by("-created_at")
+        
+        # 1. Developer Filter (Dashboard)
+        developer_id = self.request.query_params.get('developer')
+        if developer_id:
+            if developer_id == 'me':
+                queryset = queryset.filter(developer=self.request.user)
+            else:
+                queryset = queryset.filter(developer__id=developer_id)
+
+        # 2. Search (Title/Description)
+        search = self.request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search) | 
+                Q(description__icontains=search)
+            )
+
+        # 3. Stage Filter
+        stage = self.request.query_params.get('stage')
+        if stage:
+            queryset = queryset.filter(funding_stage=stage)
+
+        # 4. Tags Filter (JSONField)
+        # Simple text match for SQLite/Postgres JSON field
+        tag = self.request.query_params.get('tags')
+        if tag:
+            queryset = queryset.filter(tags__icontains=tag)
+                
+        return queryset
     serializer_class = PitchSerializer
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
