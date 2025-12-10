@@ -25,6 +25,12 @@ class ContactRequestSerializer(serializers.ModelSerializer):
             "preference",
             "viewed",
             "created_at",
+            "scheduled_start_time",
+            "scheduled_end_time",
+            "meeting_status",
+            "meeting_summary",
+            "meeting_started_at",
+            "meeting_ended_at",
         ]
 
 
@@ -40,4 +46,6 @@ class ContactRequestCreateSerializer(serializers.ModelSerializer):
             "message",
             "meeting_link",
             "preference",
+            "scheduled_start_time",
+            "scheduled_end_time",
         ]
