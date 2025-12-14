@@ -1,4 +1,4 @@
-from cloudinary_storage.storage import VideoCloudinaryStorage
+from cloudinary_storage.storage import MediaCloudinaryStorage
 
 # pitches/models.py
 from django.db import models
@@ -16,7 +16,7 @@ class Pitch(models.Model):
     tags = models.JSONField(default=list, blank=True)
     funding_stage = models.CharField(max_length=30, blank=True)
     ask = models.CharField(max_length=150, blank=True)
-    video = models.FileField(upload_to="pitches/videos/", storage=VideoCloudinaryStorage() )
+    video = models.FileField(upload_to="pitches/videos/", storage=MediaCloudinaryStorage() )
     thumbnail = models.ImageField(upload_to="pitches/thumbnails/", null=True, blank=True)
     views = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
