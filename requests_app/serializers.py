@@ -1,8 +1,26 @@
 from rest_framework import serializers
-from .models import ContactRequest
+from .models import ContactRequest, MeetingSummary
 from accounts.serializers import UserSerializer
 from pitches.serializers import PitchSerializer
 from investor_posts.serializers import InvestorPostSerializer
+
+
+class MeetingSummarySerializer(serializers.ModelSerializer):
+    """Serializer for structured meeting summaries"""
+    class Meta:
+        model = MeetingSummary
+        fields = [
+            'id',
+            'discussion_points',
+            'action_items',
+            'decisions_made',
+            'next_steps',
+            'needs_followup',
+            'followup_date',
+            'additional_notes',
+            'created_at',
+            'updated_at',
+        ]
 
 
 class ContactRequestSerializer(serializers.ModelSerializer):
@@ -12,6 +30,8 @@ class ContactRequestSerializer(serializers.ModelSerializer):
     pitch = PitchSerializer(read_only=True)
     investor_post = InvestorPostSerializer(read_only=True)
 
+    structured_summary = MeetingSummarySerializer(read_only=True)
+    
     class Meta:
         model = ContactRequest
         fields = [
@@ -31,6 +51,10 @@ class ContactRequestSerializer(serializers.ModelSerializer):
             "meeting_summary",
             "meeting_started_at",
             "meeting_ended_at",
+            "timezone",
+            "meeting_platform",
+            "agenda",
+            "structured_summary",
         ]
 
 
@@ -48,4 +72,7 @@ class ContactRequestCreateSerializer(serializers.ModelSerializer):
             "preference",
             "scheduled_start_time",
             "scheduled_end_time",
+            "timezone",
+            "meeting_platform",
+            "agenda",
         ]

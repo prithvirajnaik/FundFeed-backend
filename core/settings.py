@@ -11,8 +11,8 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-in-prod")
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-# ALLOWED_HOSTS is now dynamic
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# ALLOWED_HOSTS is now dynamic - added wildcard for local network access
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0,*").split(",")
 
 
 # ===================== APPLICATIONS ===================== #
@@ -135,9 +135,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # ===================== CORS ===================== #
 
-CORS_ALLOW_ALL_ORIGINS = True
-# Later we change to:
-# CORS_ALLOWED_ORIGINS = [
-#     "https://your-frontend.vercel.app",
-# ]
+# Allow all origins in development for easy local network access
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all in DEBUG mode
 
+# For production, restrict to specific origins:
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "https://your-frontend.vercel.app",
+    ]

@@ -10,9 +10,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
-from datetime import datetime
-from .models import ContactRequest
-from .serializers import ContactRequestSerializer, ContactRequestCreateSerializer
+from datetime import datetime, timedelta
+from .models import ContactRequest, MeetingSummary
+from .serializers import ContactRequestSerializer, ContactRequestCreateSerializer, MeetingSummarySerializer
 from pitches.models import Pitch
 from investor_posts.models import InvestorPost
 
@@ -319,3 +319,157 @@ Next Steps:
         doc.build(story)
         
         return response
+    
+    @action(detail=True, methods=["post"])
+    def generate_structured_summary(self, request, pk=None):
+        """Generate a structured meeting summary with discussion points, action items, etc."""
+        contact_request = self.get_object()
+        user = request.user
+        
+        # Verify user is part of the meeting
+        if user != contact_request.developer and user != contact_request.investor:
+            return Response(
+                {"error": "You are not authorized to generate summary for this meeting"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Check if meeting is completed
+        if contact_request.meeting_status != 'completed':
+            return Response(
+                {"error": "Meeting must be completed before generating summary"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Extract data from request
+        discussion_points = request.data.get('discussion_points', [])
+        action_items = request.data.get('action_items', [])
+        decisions_made = request.data.get('decisions_made', [])
+        next_steps = request.data.get('next_steps', '')
+        needs_followup = request.data.get('needs_followup', False)
+        followup_date = request.data.get('followup_date', None)
+        additional_notes = request.data.get('additional_notes', '')
+        
+        # Create or update MeetingSummary
+        summary, created = MeetingSummary.objects.update_or_create(
+            contact_request=contact_request,
+            defaults={
+                'discussion_points': discussion_points,
+                'action_items': action_items,
+                'decisions_made': decisions_made,
+                'next_steps': next_steps,
+                'needs_followup': needs_followup,
+                'followup_date': followup_date,
+                'additional_notes': additional_notes,
+            }
+        )
+        
+        # Also update the text summary for backward compatibility
+        summary_text = self._generate_text_from_structured(contact_request, summary)
+        contact_request.meeting_summary = summary_text
+        contact_request.save()
+        
+        serializer = MeetingSummarySerializer(summary)
+        return Response({
+            "status": "structured summary generated",
+            "summary": serializer.data
+        })
+    
+    def _generate_text_from_structured(self, contact_request, summary):
+        """Helper method to generate text summary from structured data"""
+        text = f"Meeting Summary\n\n"
+        
+        if summary.discussion_points:
+            text += "Discussion Points:\n"
+            for point in summary.discussion_points:
+                text += f"- {point}\n"
+            text += "\n"
+        
+        if summary.decisions_made:
+            text += "Decisions Made:\n"
+            for decision in summary.decisions_made:
+                text += f"- {decision}\n"
+            text += "\n"
+        
+        if summary.action_items:
+            text += "Action Items:\n"
+            for item in summary.action_items:
+                assignee = item.get('assignee', 'Unassigned')
+                task = item.get('task', '')
+                due_date = item.get('due_date', 'No due date')
+                text += f"- [{assignee}] {task} (Due: {due_date})\n"
+            text += "\n"
+        
+        if summary.next_steps:
+            text += f"Next Steps:\n{summary.next_steps}\n\n"
+        
+        if summary.needs_followup and summary.followup_date:
+            text += f"Follow-up meeting scheduled for: {summary.followup_date}\n\n"
+        
+        if summary.additional_notes:
+            text += f"Additional Notes:\n{summary.additional_notes}\n"
+        
+        return text
+    
+    @action(detail=True, methods=["post"])
+    def reschedule(self, request, pk=None):
+        """Reschedule a meeting to a new time"""
+        contact_request = self.get_object()
+        user = request.user
+        
+        # Verify user is part of the meeting
+        if user != contact_request.developer and user != contact_request.investor:
+            return Response(
+                {"error": "You are not authorized to reschedule this meeting"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Only scheduled meetings can be rescheduled
+        if contact_request.meeting_status not in ['scheduled', 'cancelled']:
+            return Response(
+                {"error": "Only scheduled or cancelled meetings can be rescheduled"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        new_start = request.data.get('scheduled_start_time')
+        new_end = request.data.get('scheduled_end_time')
+        reason = request.data.get('reason', '')
+        
+        if not new_start or not new_end:
+            return Response(
+                {"error": "Both start and end times are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update the meeting times
+        contact_request.scheduled_start_time = new_start
+        contact_request.scheduled_end_time = new_end
+        contact_request.meeting_status = 'scheduled'
+        contact_request.save()
+        
+        # TODO: Send notification to other party about reschedule
+        
+        return Response({
+            "status": "meeting rescheduled",
+            "scheduled_start_time": contact_request.scheduled_start_time,
+            "scheduled_end_time": contact_request.scheduled_end_time,
+            "reason": reason
+        })
+    
+    @action(detail=False, methods=["get"])
+    def upcoming_meetings(self, request):
+        """Get upcoming meetings for the current user (next 7 days)"""
+        user = request.user
+        now = timezone.now()
+        week_from_now = now + timedelta(days=7)
+        
+        # Get meetings where user is involved and meeting is scheduled
+        upcoming = ContactRequest.objects.filter(
+            models.Q(developer=user) | models.Q(investor=user),
+            meeting_status='scheduled',
+            scheduled_start_time__gte=now,
+            scheduled_start_time__lte=week_from_now
+        ).order_by('scheduled_start_time')
+        
+        serializer = self.get_serializer(upcoming, many=True)
+        return Response(serializer.data)
+
