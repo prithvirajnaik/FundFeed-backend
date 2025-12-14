@@ -143,5 +143,5 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all in DEBUG mode
 # For production, restrict to specific origins:
 if not DEBUG:
     CORS_ALLOWED_ORIGINS = [
-        "https://your-frontend.vercel.app",
+        "https://fund-feed.vercel.app",
     ]
