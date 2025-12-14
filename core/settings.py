@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "cloudinary_storage",  # <--- Add this
+    "cloudinary",
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -131,8 +133,16 @@ if not DEBUG:
 
 # ===================== MEDIA FILES ===================== #
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# ===================== MEDIA FILES ===================== #
+# Media settings for Cloudinary
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": os.getenv("CLOUDINARY_API_KEY"),
+    "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
+}
+MEDIA_URL = "/media/"  # Keep this for consistency, though Cloudinary handles URLs
+MEDIA_ROOT = BASE_DIR / "media" # Keep as fallback
 
 
 # ===================== CORS ===================== #
