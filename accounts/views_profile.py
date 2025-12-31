@@ -49,17 +49,38 @@ def update_profile(request):
     # Handle Avatar Upload
     if "avatar" in request.FILES:
         avatar_file = request.FILES["avatar"]
-        from django.core.files.storage import default_storage
-        from django.core.files.base import ContentFile
+        print(f"[DEBUG] Received avatar file: {avatar_file.name}, size: {avatar_file.size}")
         
-        # Save file to Cloudinary (via default_storage)
-        file_path = default_storage.save(f"avatars/{user.id}_{avatar_file.name}", ContentFile(avatar_file.read()))
-        
-        # Get the actual URL from Cloudinary storage
-        # default_storage.url() returns the full Cloudinary URL
-        cloudinary_url = default_storage.url(file_path)
-        user.avatar_url = cloudinary_url
-        user.save()
+        try:
+            import cloudinary.uploader
+            print("[DEBUG] Cloudinary module imported successfully")
+            
+            # Upload directly to Cloudinary
+            result = cloudinary.uploader.upload(
+                avatar_file,
+                folder="avatars",
+                public_id=f"{user.id}_{avatar_file.name.split('.')[0]}",
+                overwrite=True,
+                resource_type="image"
+            )
+            print(f"[DEBUG] Cloudinary result: {result}")
+            
+            # Get the secure URL from Cloudinary response
+            user.avatar_url = result.get('secure_url') or result.get('url')
+            print(f"[DEBUG] Saved avatar_url: {user.avatar_url}")
+            user.save()
+        except Exception as e:
+            print(f"[ERROR] Cloudinary upload failed: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback: save locally if Cloudinary fails
+            from django.core.files.storage import default_storage
+            from django.core.files.base import ContentFile
+            file_path = default_storage.save(f"avatars/{user.id}_{avatar_file.name}", ContentFile(avatar_file.read()))
+            user.avatar_url = f"/media/{file_path}"
+            user.save()
+    else:
+        print(f"[DEBUG] No avatar in request.FILES. Keys: {list(request.FILES.keys())}")
 
     if user.role == "developer":
         profile, _ = DeveloperProfile.objects.get_or_create(user=user)
