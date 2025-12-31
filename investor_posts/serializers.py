@@ -28,7 +28,15 @@ class InvestorPostSerializer(serializers.ModelSerializer):
 
     def get_logo_url(self, obj):
         if obj.logo:
-            return obj.logo.url
+            url = obj.logo.url
+            # If it's already a full URL (Cloudinary), return as-is
+            if url.startswith('http'):
+                return url
+            # Otherwise, build absolute URL for local /media/ paths
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(url)
+            return url
         return None
 
 class InvestorPostCreateSerializer(serializers.ModelSerializer):
