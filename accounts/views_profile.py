@@ -52,12 +52,13 @@ def update_profile(request):
         from django.core.files.storage import default_storage
         from django.core.files.base import ContentFile
         
-        # Save file
+        # Save file to Cloudinary (via default_storage)
         file_path = default_storage.save(f"avatars/{user.id}_{avatar_file.name}", ContentFile(avatar_file.read()))
         
-        # Update user avatar_url
-        # Assuming MEDIA_URL is /media/
-        user.avatar_url = f"/media/{file_path}"
+        # Get the actual URL from Cloudinary storage
+        # default_storage.url() returns the full Cloudinary URL
+        cloudinary_url = default_storage.url(file_path)
+        user.avatar_url = cloudinary_url
         user.save()
 
     if user.role == "developer":
