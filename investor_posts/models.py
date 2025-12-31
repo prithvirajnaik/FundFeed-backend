@@ -7,6 +7,11 @@ def gen_uuid():
     return str(uuid.uuid4())
 
 class InvestorPost(models.Model):
+    STATUS_CHOICES = (
+        ("pending", "Pending Verification"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
     id = models.CharField(max_length=50, primary_key=True, default=gen_uuid, editable=False)
     investor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="investor_posts")
     title = models.CharField(max_length=150)
@@ -17,6 +22,11 @@ class InvestorPost(models.Model):
     location = models.CharField(max_length=120, blank=True)
     contact_preference = models.CharField(max_length=20, default="email")
     logo = models.ImageField(upload_to="investor/logos/", null=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
     views = models.IntegerField(default=0)
     saved_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

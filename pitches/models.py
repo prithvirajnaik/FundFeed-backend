@@ -9,6 +9,12 @@ def gen_uuid():
     return str(uuid.uuid4())
 
 class Pitch(models.Model):
+    STATUS_CHOICES = (
+        ("pending", "Pending Verification"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
+
     id = models.CharField(max_length=50, primary_key=True, default=gen_uuid, editable=False)
     developer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="pitches")
     title = models.CharField(max_length=80)
@@ -18,6 +24,11 @@ class Pitch(models.Model):
     ask = models.CharField(max_length=150, blank=True)
     video = models.FileField(upload_to="pitches/videos/", storage=VideoMediaCloudinaryStorage() )
     thumbnail = models.ImageField(upload_to="pitches/thumbnails/", null=True, blank=True)
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
     views = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 

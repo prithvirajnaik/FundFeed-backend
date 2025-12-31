@@ -27,11 +27,22 @@ from .models import User, DeveloperProfile, InvestorProfile
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("email", "username", "role", "is_active")
-    list_filter = ("role", "is_active")
+    list_display = ("email", "username", "role", "status", "is_active")
+    list_filter = ("role", "status", "is_active")
     search_fields = ("email", "username")
     ordering = ("email",)
     readonly_fields = ("id",)
+
+    actions = ["approve_users", "reject_users"]
+
+    def approve_users(self, request, queryset):
+        queryset.update(status="approved", is_active=True)
+
+    def reject_users(self, request, queryset):
+        queryset.update(status="rejected", is_active=False)
+
+    approve_users.short_description = "Approve selected users"
+    reject_users.short_description = "Reject selected users"
 
 @admin.register(DeveloperProfile)
 class DeveloperProfileAdmin(admin.ModelAdmin):

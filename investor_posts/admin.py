@@ -3,11 +3,23 @@ from .models import InvestorPost, SavedInvestorPost
 
 @admin.register(InvestorPost)
 class InvestorPostAdmin(admin.ModelAdmin):
-    list_display = ("title", "investor", "amount_range", "location", "views", "created_at")
-    list_filter = ("location", "created_at")
+    list_display = ("title", "investor", "status", "amount_range", "location", "views", "created_at")
+    list_filter = ("status", "location", "created_at")
     search_fields = ("title", "tags", "investor__email")
     ordering = ("-created_at",)
     readonly_fields = ("id", "views", "saved_count", "created_at")
+
+    actions = ["approve_posts", "reject_posts"]
+
+    def approve_posts(self, request, queryset):
+        queryset.update(status="approved")
+
+    def reject_posts(self, request, queryset):
+        queryset.update(status="rejected")
+
+    approve_posts.short_description = "Approve selected investor posts"
+    reject_posts.short_description = "Reject selected investor posts"
+
 
 @admin.register(SavedInvestorPost)
 class SavedInvestorPostAdmin(admin.ModelAdmin):

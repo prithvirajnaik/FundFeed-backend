@@ -7,6 +7,11 @@ def gen_uuid():
 
 
 class User(AbstractUser):
+    STATUS_CHOICES = (
+        ("pending", "Pending Verification"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
     id = models.CharField(max_length=50, primary_key=True, default=gen_uuid, editable=False)
 
     # override AbstractUser's username so it is NOT unique
@@ -23,6 +28,12 @@ class User(AbstractUser):
         choices=(("developer", "developer"), ("investor", "investor")),
         default="developer"
     )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
     avatar_url = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=120, blank=True, null=True)
 
