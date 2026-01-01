@@ -145,6 +145,16 @@ MEDIA_URL = "/media/"  # Keep this for consistency, though Cloudinary handles UR
 MEDIA_ROOT = BASE_DIR / "media" # Keep as fallback
 
 
+# ===================== EMAIL CONFIGURATION ===================== #
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = 'noreply@fundfeed.com'
+
+
 # ===================== CORS ===================== #
 
 # Allow all origins in development for easy local network access
