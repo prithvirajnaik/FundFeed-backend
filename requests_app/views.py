@@ -81,9 +81,9 @@ class ContactRequestViewSet(viewsets.ModelViewSet):
             send_mail(
                 subject="Investor Contacted Developer",
                 message="Investor has contacted Developer",
-                from_email=settings.EMAIL_HOST_USER,
+                from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=['prithvirajnaik318@gmail.com'],
-                fail_silently=true,
+                fail_silently=False,
             )
         elif post_id:
             # Developer contacting Investor
