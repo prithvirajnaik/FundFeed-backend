@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Pitch, SavedPitch
-import models
+from django.db import models
 @admin.register(Pitch)
 class PitchAdmin(admin.ModelAdmin):
     list_display = ("title", "developer", "status", "funding_stage", "views", "created_at")
