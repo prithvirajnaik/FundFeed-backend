@@ -8,6 +8,16 @@ class ContactRequestAdmin(admin.ModelAdmin):
     search_fields = ("developer__email", "investor__email", "message")
     readonly_fields = ("id", "created_at")
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['summary_stats'] = {
+            'Total Requests': ContactRequest.objects.count(),
+            'Scheduled Meetings': ContactRequest.objects.filter(meeting_status='scheduled').count(),
+            'Completed Meetings': ContactRequest.objects.filter(meeting_status='completed').count(),
+            'Pending View': ContactRequest.objects.filter(viewed=False).count(),
+        }
+        return super().changelist_view(request, extra_context=extra_context)
+
 @admin.register(MeetingSummary)
 class MeetingSummaryAdmin(admin.ModelAdmin):
     list_display = ("contact_request", "needs_followup", "created_at", "updated_at")

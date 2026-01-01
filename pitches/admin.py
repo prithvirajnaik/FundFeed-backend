@@ -9,16 +9,17 @@ class PitchAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     readonly_fields = ("id", "views", "created_at")
 
-    actions = ["approve_pitches", "reject_pitches"]
+    # approve_pitches.short_description = "Approve selected pitches"
+    # reject_pitches.short_description = "Reject selected pitches"
 
-    def approve_pitches(self, request, queryset):
-        queryset.update(status="approved")
-
-    def reject_pitches(self, request, queryset):
-        queryset.update(status="rejected")
-
-    approve_pitches.short_description = "Approve selected pitches"
-    reject_pitches.short_description = "Reject selected pitches"
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['summary_stats'] = {
+            'total_pitches': Pitch.objects.count(),
+            'total_views': Pitch.objects.aggregate(models.Sum('views'))['views__sum'] or 0,
+            'approved_count': Pitch.objects.filter(status='approved').count(),
+        }
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(SavedPitch)

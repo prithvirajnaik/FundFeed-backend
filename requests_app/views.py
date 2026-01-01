@@ -16,6 +16,8 @@ from .serializers import ContactRequestSerializer, ContactRequestCreateSerialize
 from pitches.models import Pitch
 from investor_posts.models import InvestorPost
 from django.conf import settings
+from django.core.mail import send_mail
+
 class ContactRequestViewSet(viewsets.ModelViewSet):
     serializer_class = ContactRequestSerializer
     permission_classes = [permissions.IsAuthenticated]

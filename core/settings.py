@@ -19,6 +19,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0,*").spli
 # ===================== APPLICATIONS ===================== #
 
 INSTALLED_APPS = [
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -36,6 +37,30 @@ INSTALLED_APPS = [
     "requests_app",
     "django_extensions",
 ]
+
+JAZZMIN_SETTINGS = {
+    "site_title": "FundFeed Admin",
+    "site_header": "FundFeed",
+    "site_brand": "FundFeed",
+    "welcome_sign": "Welcome to FundFeed Administration",
+    "copyright": "FundFeed Ltd",
+    "search_model": "accounts.User",
+    "topmenu_links": [
+        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"model": "accounts.User"},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "order_with_respect_to": ["accounts", "pitches", "investor_posts", "requests_app"],
+    "icons": {
+        "accounts.User": "fas fa-users",
+        "accounts.DeveloperProfile": "fas fa-code",
+        "accounts.InvestorProfile": "fas fa-briefcase",
+        "pitches.Pitch": "fas fa-lightbulb",
+        "requests_app.ContactRequest": "fas fa-envelope",
+    },
+    "show_ui_builder": True,
+}
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -56,7 +81,7 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
