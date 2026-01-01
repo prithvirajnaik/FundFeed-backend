@@ -1,5 +1,7 @@
 from rest_framework import viewsets, permissions, status, filters
-from rest_framework.decorators import action
+from django.http import HttpResponse
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import InvestorPost, SavedInvestorPost
@@ -9,6 +11,8 @@ from .serializers import (
     SavedInvestorPostSerializer,
 )
 
+from django.core.mail import send_mail
+from django.conf import settings
 class IsInvestorOrReadOnly(permissions.BasePermission):
     """
     Custom permission to only allow investors to create posts.
@@ -117,3 +121,39 @@ class InvestorPostViewSet(viewsets.ModelViewSet):
         saved_posts = SavedInvestorPost.objects.filter(developer=user).select_related("post")
         serializer = SavedInvestorPostSerializer(saved_posts, many=True)
         return Response(serializer.data)
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def test(request):
+    """
+    Test endpoint to verify email sending configuration.
+    Usage: /api/test/?email=target@example.com
+    """
+    target_email = request.GET.get('email', 'prithvirajnaik318@gmail.com')
+    
+    # If authenticated, try to use user's email if no param provided
+    if not request.GET.get('email') and request.user.is_authenticated:
+        target_email = request.user.email
+
+    try:
+        print("EMAIL_BACKEND IN USE:", settings.EMAIL_BACKEND)
+        print("FROM EMAIL:", settings.DEFAULT_FROM_EMAIL)
+        print("SMTP USER:", settings.EMAIL_HOST_USER)
+
+        print(f"************* Sending Test Email to {target_email} ***************")
+        send_mail(
+            subject="Test Email from FundFeed",
+            message="This is a test email to verify the notification system is working correctly.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[target_email],
+            fail_silently=False,
+        )
+        print("************* Email Sent Successfully ***************")
+        return HttpResponse(f"Email sent successfully to {target_email}", status=200)
+    except Exception as e:
+        print(f"************* Email Failed: {str(e)} ***************")
+        return HttpResponse(f"Failed to send email: {str(e)}", status=500)
