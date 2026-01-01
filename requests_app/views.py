@@ -15,7 +15,7 @@ from .models import ContactRequest, MeetingSummary
 from .serializers import ContactRequestSerializer, ContactRequestCreateSerializer, MeetingSummarySerializer
 from pitches.models import Pitch
 from investor_posts.models import InvestorPost
-
+from django.conf import settings
 class ContactRequestViewSet(viewsets.ModelViewSet):
     serializer_class = ContactRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -76,6 +76,14 @@ class ContactRequestViewSet(viewsets.ModelViewSet):
                 investor=user,
                 developer=pitch.developer,
                 pitch=pitch
+            )
+            print("********************ttt__________________")
+            send_mail(
+                subject="Investor Contacted Developer",
+                message="Investor has contacted Developer",
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=['prithvirajnaik318@gmail.com'],
+                fail_silently=true,
             )
         elif post_id:
             # Developer contacting Investor
